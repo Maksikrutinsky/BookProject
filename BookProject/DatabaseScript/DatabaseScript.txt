@@ -1,0 +1,104 @@
+﻿CREATE DATABASE EBookLibrary;
+GO
+
+USE EBookLibrary;
+GO
+
+-- טבלת משתמשים
+CREATE TABLE Users (
+    UserId INT PRIMARY KEY IDENTITY(1,1),
+    Username NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    Password NVARCHAR(100) NOT NULL,
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    IsActive BIT DEFAULT 1,
+    IsAdmin BIT DEFAULT 0
+);
+
+-- טבלת ספרים
+CREATE TABLE Books (
+    BookId INT PRIMARY KEY IDENTITY(1,1),
+    Title NVARCHAR(200) NOT NULL,
+    Author NVARCHAR(100) NOT NULL,
+    Publisher NVARCHAR(100) NOT NULL,
+    PublishYear INT NOT NULL,
+    Description NVARCHAR(MAX),
+    CoverImageUrl NVARCHAR(500),
+    AgeLimit INT,
+    Genre NVARCHAR(50) NOT NULL,
+    IsBorrowable BIT DEFAULT 1,
+    IsBuyable BIT DEFAULT 1,
+    BorrowPrice DECIMAL(18,2) NOT NULL,
+    BuyPrice DECIMAL(18,2) NOT NULL,
+    PreviousPrice DECIMAL(18,2),
+    DiscountEndDate DATETIME,
+    FormatEpub BIT DEFAULT 0,
+    FormatF2b BIT DEFAULT 0,
+    FormatMobi BIT DEFAULT 0,
+    FormatPDF BIT DEFAULT 0,
+    IsActive BIT DEFAULT 1
+);
+
+-- טבלת רכישות
+CREATE TABLE Purchases (
+    PurchaseId INT PRIMARY KEY IDENTITY(1,1),
+    UserId INT NOT NULL,
+    BookId INT NOT NULL,
+    PurchaseStatus BIT DEFAULT 0,
+    PurchaseDate DATETIME DEFAULT GETDATE(),
+    PaymentMethod NVARCHAR(50),
+    FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    FOREIGN KEY (BookId) REFERENCES Books(BookId)
+);
+
+-- טבלת השאלות
+CREATE TABLE Borrows (
+    BorrowId INT PRIMARY KEY IDENTITY(1,1),
+    UserId INT NOT NULL,
+    BookId INT NOT NULL,
+    BorrowStatus BIT DEFAULT 0,
+    BorrowDate DATETIME DEFAULT GETDATE(),
+    ReturnDate DATETIME NOT NULL,
+    FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    FOREIGN KEY (BookId) REFERENCES Books(BookId)
+);
+
+-- טבלת דירוגים
+CREATE TABLE Ratings (
+    RatingId INT PRIMARY KEY IDENTITY(1,1),
+    UserId INT NOT NULL,
+    BookId INT,
+    RatingValue INT NOT NULL CHECK (RatingValue BETWEEN 1 AND 5),
+    Comment NVARCHAR(MAX),
+    Type NVARCHAR(20) NOT NULL,
+    CreatedAt DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    FOREIGN KEY (BookId) REFERENCES Books(BookId)
+);
+
+-- טבלת רשימת המתנה
+CREATE TABLE WaitingList (
+    WaitingId INT PRIMARY KEY IDENTITY(1,1),
+    BookId INT NOT NULL,
+    UserId INT NOT NULL,
+    Position INT NOT NULL,
+    RequestDate DATETIME DEFAULT GETDATE(),
+    NotificationSent BIT DEFAULT 0,
+    FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    FOREIGN KEY (BookId) REFERENCES Books(BookId),
+    CONSTRAINT UC_UserBook UNIQUE (BookId, UserId)
+);
+
+-- טבלת עגלת קניות
+CREATE TABLE Cart (
+    CartId INT PRIMARY KEY IDENTITY(1,1),
+    UserId INT NOT NULL,
+    BookId INT NOT NULL,
+    TypeBook BIT DEFAULT 0,
+    AddedDate DATETIME DEFAULT GETDATE(),
+    IsActive BIT DEFAULT 1,
+    FOREIGN KEY (UserId) REFERENCES Users(UserId),
+    FOREIGN KEY (BookId) REFERENCES Books(BookId),
+    CONSTRAINT UC_UserBookCart UNIQUE (UserId, BookId, TypeBook)
+);
+GO
